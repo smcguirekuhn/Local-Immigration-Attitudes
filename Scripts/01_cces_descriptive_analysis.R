@@ -8,6 +8,7 @@ rm(list = ls())
 library(haven)
 library(purrr)
 library(dplyr)
+library(ggplot2)
 
 # source helper functions ----
 list.files(path = "./Functions", full.names = TRUE) |> purrr::walk(.f = source)
@@ -21,14 +22,16 @@ ccesCombinedFilename <- "CCES/CCESCombined.rds"
 ccesCombined <- list.files(
   path = file.path(dataPath, ccesCodedPath),
   full.names = TRUE
-) |>
-  purrr::map_dfr(
-    .f = \(ccesFile) readRDS(ccesFile) |>
-      dplyr::mutate(
-        Year = strsplit(x = ccesFile, split = "_")[[1]][2] |> as.numeric(),
-        .before = 1
-      )
-  )
+) |> purrr::map_dfr(.f = \(ccesFile) readRDS(file = ccesFile))
 
 # save combined cces data ---
 ccesCombined |> saveRDS(file = file.path(dataPath, ccesCombinedFilename))
+
+ccesCombined |>
+  dplyr::group_by(Year, Democrat) |>
+  dplyr::summarise(`Mean Support` = mean(`Increase Patrols`, na.rm = TRUE)) |>
+  tidyr::drop_na() |>
+  ggplot2::ggplot(mapping = ggplot2::aes(x = Year, y = `Mean Support`, group = factor(Democrat))) +
+  ggplot2::geom_line(mapping = ggplot2::aes(color = factor(Democrat))) +
+  ggplot2::labs(title = "Support for Increasing Border Patrols", color = "Democrats") +
+  ggplot2::theme_minimal()
