@@ -177,7 +177,8 @@ cces2023Coded <- cces2023Coded |>
 
 ## select recoded variables ----
 cces2023Coded <- cces2023Coded |>
-  dplyr::select(dplyr::all_of(names(relevantVariables2023)))
+  dplyr::select(dplyr::all_of(names(relevantVariables2023))) |>
+  dplyr::mutate(Year = "2023", .before = 1)
 
 ## save coded cces ----
 cces2023Coded |> saveRDS(file = file.path(dataPath, cces2023CodedFilename))
