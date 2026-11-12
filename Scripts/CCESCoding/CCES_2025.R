@@ -22,36 +22,6 @@ cces2025CodedFilename <- "CCES/Coded/CCES25Coded.rds"
 # import 2025 cces file ----
 cces2025 <- haven::read_dta(file = file.path(dataPath, cces2025Filename))
 
-# assign display names of relevant variables for 2025 ----
-relevantVariables2025 <- c(
-  "Weight" = "commonweight",
-  "End Time" = "endtime",
-  "Age" = "birthyr",
-  "White" = "race",
-  "Black" = "race",
-  "Hispanic" = "race",
-  "Male" = "gender4",
-  "Education" = "educ",
-  "Income" = "faminc_new",
-  "Immigrant" = "immstat",
-  "State" = "inputstate",
-  "County" = "countyfips",
-  "Rurality" = "urbancity",
-  "Democrat" = "pid7",
-  "Liberal" = "ideo5",
-  "Republican" = "pid7",
-  "Conservative" = "ideo5",
-  "Presidential Approval" = "CC25_312a",
-  "Recent Incumbent Vote" = "presvote24post",
-  "Grant Legal Status" = "CC25_323a",
-  "Increase Patrols" = "CC25_323b",
-  "Build a Wall" = "CC25_323c",
-  "Dreamer Residence" = "CC25_323d",
-  "Require Detention" = "CC25_340c",
-  "End Birthright" = "CC25_342a",
-  "Ban Countries" = "CC25_342b"
-)
-
 ## initialize coded cces data frame ----
 cces2025Coded <- cces2025
 
@@ -112,9 +82,14 @@ cces2025Coded <- cces2025Coded |>
 cces2025Coded <- cces2025Coded |>
   dplyr::mutate(State = haven::as_factor(inputstate)) |>
   dplyr::mutate(County = countyfips) |>
-  dplyr::mutate(Rurality = haven::as_factor(urbancity))
+  recodeScale(
+    columnName = "urbancity",
+    newColumnName = "Rurality",
+    scaleMin = 1,
+    scaleMax = 4
+  )
 
-## recode political variables ----
+## recode political identity variables ----
 cces2025Coded <- cces2025Coded |>
   recodeBinary(
     columnName = "pid7",
@@ -139,6 +114,15 @@ cces2025Coded <- cces2025Coded |>
     newColumnName = "Conservative",
     qualifyingValues = 4:5,
     disqualifyingValues = c(1:3, 6)
+  )
+
+## recode political participation variables ----
+cces2025Coded <- cces2025Coded |>
+  recodeBinary(
+    columnName = "votereg",
+    newColumnName = "Registered Voter",
+    qualifyingValues = 1,
+    disqualifyingValues = 2:3
   ) |>
   recodeScale(
     columnName = "CC25_312a",
@@ -148,17 +132,23 @@ cces2025Coded <- cces2025Coded |>
     reverse = TRUE
   ) |>
   recodeBinary(
-    columnName = "presvote24post",
-    newColumnName = "Recent Incumbent Vote",
+    columnName = "presvote20post",
+    newColumnName = "Republican President Vote",
+    qualifyingValues = 2,
+    disqualifyingValues = c(1, 3:9)
+  ) |>
+  recodeBinary(
+    columnName = "presvote20post",
+    newColumnName = "Democrat President Vote",
     qualifyingValues = 1,
-    disqualifyingValues = c(1, 3:6)
+    disqualifyingValues = 2:9
   )
 
 ## recode immigration variables ----
 cces2025Coded <- cces2025Coded |>
   recodeBinary(
     columnName = "CC25_323a",
-    newColumnName = "Grant Legal Status",
+    newColumnName = "Legal Status Amnesty",
     qualifyingValues = 1,
     disqualifyingValues = 2
   ) |>
@@ -176,13 +166,13 @@ cces2025Coded <- cces2025Coded |>
   ) |>
   recodeBinary(
     columnName = "CC25_323d",
-    newColumnName = "Dreamer Residence",
+    newColumnName = "Legal Status for Dreamers",
     qualifyingValues = 1,
     disqualifyingValues = 2
   ) |>
   recodeBinary(
     columnName = "CC25_340c",
-    newColumnName = "Require Detention",
+    newColumnName = "Require Detention for Theft",
     qualifyingValues = 1,
     disqualifyingValues = 2
   ) |>
@@ -194,10 +184,42 @@ cces2025Coded <- cces2025Coded |>
   ) |>
   recodeBinary(
     columnName = "CC25_342b",
-    newColumnName = "Ban Countries",
+    newColumnName = "Ban Muslim Countries",
     qualifyingValues = 1,
     disqualifyingValues = 2
   )
+
+## check new names of relevant variables for 2025 ----
+relevantVariables2025 <- c(
+  "Weight" = "commonweight",
+  "End Time" = "endtime",
+  "Age" = "birthyr",
+  "White" = "race",
+  "Black" = "race",
+  "Hispanic" = "race",
+  "Male" = "gender4",
+  "Education" = "educ",
+  "Income" = "faminc_new",
+  "Immigrant" = "immstat",
+  "State" = "inputstate",
+  "County" = "countyfips",
+  "Rurality" = "urbancity",
+  "Democrat" = "pid7",
+  "Liberal" = "ideo5",
+  "Republican" = "pid7",
+  "Conservative" = "ideo5",
+  "Registered Voter" = "votereg",
+  "Presidential Approval" = "CC25_312a",
+  "Republican President Vote" = "presvote24post",
+  "Democrat President Vote" = "presvote24post",
+  "Legal Status Amnesty" = "CC25_323a",
+  "Increase Patrols" = "CC25_323b",
+  "Build a Wall" = "CC25_323c",
+  "Legal Status for Dreamers" = "CC25_323d",
+  "Require Detention for Theft" = "CC25_340c",
+  "End Birthright" = "CC25_342a",
+  "Ban Muslim Countries" = "CC25_342b"
+)
 
 ## select recoded variables ----
 cces2025Coded <- cces2025Coded |>

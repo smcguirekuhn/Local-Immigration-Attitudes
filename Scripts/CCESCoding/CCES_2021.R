@@ -22,33 +22,6 @@ cces2021CodedFilename <- "CCES/Coded/CCES21Coded.rds"
 # import 2021 cces file ----
 cces2021 <- haven::read_dta(file = file.path(dataPath, cces2021Filename))
 
-## assign display names of relevant variables for 2021 ----
-relevantVariables2021 <- c(
-  "Weight" = "commonweight",
-  "End Time" = "endtime",
-  "Age" = "birthyr",
-  "White" = "race",
-  "Black" = "race",
-  "Hispanic" = "race",
-  "Male" = "gender4",
-  "Education" = "educ",
-  "Income" = "faminc_new",
-  "Immigrant" = "immstat",
-  "State" = "inputstate",
-  "County" = "countyfips",
-  "Rurality" = "urbancity",
-  "Democrat" = "pid7",
-  "Liberal" = "ideo5",
-  "Republican" = "pid7",
-  "Conservative" = "ideo5",
-  "Presidential Approval" = "CC22_315a",
-  "Recent Incumbent Vote" = "presvote20post",
-  "Grant Legal Status" = "CC21_322a",
-  "Increase Patrols" = "CC21_322b",
-  "Withold Federal Funds" = "CC21_322c",
-  "Build a Wall" = "CC21_322d"
-)
-
 ## initialize coded cces data frame ----
 cces2021Coded <- cces2021
 
@@ -106,9 +79,14 @@ cces2021Coded <- cces2021Coded |>
 cces2021Coded <- cces2021Coded |>
   dplyr::mutate(State = haven::as_factor(inputstate)) |>
   dplyr::mutate(County = countyfips) |>
-  dplyr::mutate(Rurality = haven::as_factor(urbancity))
+  recodeScale(
+    columnName = "urbancity",
+    newColumnName = "Rurality",
+    scaleMin = 1,
+    scaleMax = 4
+  )
 
-## recode political variables ----
+## recode political identity variables ----
 cces2021Coded <- cces2021Coded |>
   recodeBinary(
     columnName = "pid7",
@@ -133,6 +111,15 @@ cces2021Coded <- cces2021Coded |>
     newColumnName = "Conservative",
     qualifyingValues = 4:5,
     disqualifyingValues = c(1:3, 6)
+  )
+
+## recode political participation variables ----
+cces2021Coded <- cces2021Coded |>
+  recodeBinary(
+    columnName = "votereg",
+    newColumnName = "Registered Voter",
+    qualifyingValues = 1,
+    disqualifyingValues = 2:3
   ) |>
   recodeScale(
     columnName = "CC21_315a",
@@ -143,16 +130,22 @@ cces2021Coded <- cces2021Coded |>
   ) |>
   recodeBinary(
     columnName = "presvote20post",
-    newColumnName = "Recent Incumbent Vote",
+    newColumnName = "Republican President Vote",
     qualifyingValues = 2,
     disqualifyingValues = c(1, 3:6)
+  ) |>
+  recodeBinary(
+    columnName = "presvote20post",
+    newColumnName = "Democrat President Vote",
+    qualifyingValues = 1,
+    disqualifyingValues = 2:6
   )
 
 ## recode immigration variables ----
 cces2021Coded <- cces2021Coded |>
   recodeBinary(
     columnName = "CC21_322a",
-    newColumnName = "Grant Legal Status",
+    newColumnName = "Legal Status Amnesty",
     qualifyingValues = 1,
     disqualifyingValues = 2
   ) |>
@@ -173,7 +166,43 @@ cces2021Coded <- cces2021Coded |>
     newColumnName = "Build a Wall",
     qualifyingValues = 1,
     disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC21_322e",
+    newColumnName = "Legal Status for Dreamers",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
   )
+
+## check new names of relevant variables for 2021 ----
+relevantVariables2021 <- c(
+  "Weight" = "commonweight",
+  "End Time" = "endtime",
+  "Age" = "birthyr",
+  "White" = "race",
+  "Black" = "race",
+  "Hispanic" = "race",
+  "Male" = "gender4",
+  "Education" = "educ",
+  "Income" = "faminc_new",
+  "Immigrant" = "immstat",
+  "State" = "inputstate",
+  "County" = "countyfips",
+  "Rurality" = "urbancity",
+  "Democrat" = "pid7",
+  "Liberal" = "ideo5",
+  "Republican" = "pid7",
+  "Conservative" = "ideo5",
+  "Registered Voter" = "votereg",
+  "Presidential Approval" = "CC22_315a",
+  "Republican President Vote" = "presvote20post",
+  "Democrat President Vote" = "presvote20post",
+  "Legal Status Amnesty" = "CC21_322a",
+  "Increase Patrols" = "CC21_322b",
+  "Withold Federal Funds" = "CC21_322c",
+  "Build a Wall" = "CC21_322d",
+  "Legal Status for Dreamers" = "CC21_322e"
+)
 
 ## select recoded variables ----
 cces2021Coded <- cces2021Coded |>

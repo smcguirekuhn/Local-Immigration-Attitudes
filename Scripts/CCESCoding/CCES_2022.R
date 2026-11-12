@@ -22,33 +22,6 @@ cces2022CodedFilename <- "CCES/Coded/CCES22Coded.rds"
 # import 2022 cces file ----
 cces2022 <- haven::read_dta(file = file.path(dataPath, cces2022Filename))
 
-## assign display names of relevant variables for 2022 ----
-relevantVariables2022 <- c(
-  "Weight" = "commonweight",
-  "End Time" = "endtime",
-  "Age" = "birthyr",
-  "White" = "race",
-  "Black" = "race",
-  "Hispanic" = "race",
-  "Male" = "gender4",
-  "Education" = "educ",
-  "Income" = "faminc_new",
-  "Immigrant" = "immstat",
-  "State" = "inputstate",
-  "County" = "countyfips",
-  "Rurality" = "urbancity",
-  "Democrat" = "pid7",
-  "Liberal" = "ideo5",
-  "Republican" = "pid7",
-  "Conservative" = "ideo5",
-  "Presidential Approval" = "CC22_320a",
-  "Recent Incumbent Vote" = "presvote20post",
-  "Grant Legal Status" = "CC22_331a",
-  "Increase Patrols" = "CC22_331b",
-  "Eliminate Lottery" = "CC22_331c",
-  "Increase Spending" = "CC22_331d"
-)
-
 ## initialize coded cces data frame ----
 cces2022Coded <- cces2022
 
@@ -106,9 +79,14 @@ cces2022Coded <- cces2022Coded |>
 cces2022Coded <- cces2022Coded |>
   dplyr::mutate(State = haven::as_factor(inputstate)) |>
   dplyr::mutate(County = countyfips) |>
-  dplyr::mutate(Rurality = haven::as_factor(urbancity))
+  recodeScale(
+    columnName = "urbancity",
+    newColumnName = "Rurality",
+    scaleMin = 1,
+    scaleMax = 4
+  )
 
-## recode political variables ----
+## recode political identity variables ----
 cces2022Coded <- cces2022Coded |>
   recodeBinary(
     columnName = "pid7",
@@ -133,6 +111,15 @@ cces2022Coded <- cces2022Coded |>
     newColumnName = "Conservative",
     qualifyingValues = 4:5,
     disqualifyingValues = c(1:3, 6)
+  )
+
+## recode political participation variables ----
+cces2022Coded <- cces2022Coded |>
+  recodeBinary(
+    columnName = "votereg",
+    newColumnName = "Registered Voter",
+    qualifyingValues = 1,
+    disqualifyingValues = 2:3
   ) |>
   recodeScale(
     columnName = "CC22_320a",
@@ -143,16 +130,58 @@ cces2022Coded <- cces2022Coded |>
   ) |>
   recodeBinary(
     columnName = "presvote20post",
-    newColumnName = "Recent Incumbent Vote",
+    newColumnName = "Republican President Vote",
     qualifyingValues = 2,
     disqualifyingValues = c(1, 3:6)
+  ) |>
+  recodeBinary(
+    columnName = "presvote20post",
+    newColumnName = "Democrat President Vote",
+    qualifyingValues = 1,
+    disqualifyingValues = 2:6
+  ) |>
+  recodeBinary(
+    columnName = "CC22_430a_1",
+    newColumnName = "Attended Meetings",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC22_430a_2",
+    newColumnName = "Put Up Sign",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC22_430a_3",
+    newColumnName = "Worked for Candidate",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC22_430a_4",
+    newColumnName = "Protested",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC22_430a_5",
+    newColumnName = "Contacted Official",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC22_430a_6",
+    newColumnName = "Donated Money",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
   )
 
 ## recode immigration variables ----
 cces2022Coded <- cces2022Coded |>
   recodeBinary(
     columnName = "CC22_331a",
-    newColumnName = "Grant Legal Status",
+    newColumnName = "Legal Status Amnesty",
     qualifyingValues = 1,
     disqualifyingValues = 2
   ) |>
@@ -170,10 +199,45 @@ cces2022Coded <- cces2022Coded |>
   ) |>
   recodeBinary(
     columnName = "CC22_331d",
-    newColumnName = "Increase Spending",
+    newColumnName = "Increase Spending Plus Wall",
     qualifyingValues = 1,
     disqualifyingValues = 2
   )
+
+## check new names of relevant variables for 2022 ----
+relevantVariables2022 <- c(
+  "Weight" = "commonweight",
+  "End Time" = "endtime",
+  "Age" = "birthyr",
+  "White" = "race",
+  "Black" = "race",
+  "Hispanic" = "race",
+  "Male" = "gender4",
+  "Education" = "educ",
+  "Income" = "faminc_new",
+  "Immigrant" = "immstat",
+  "State" = "inputstate",
+  "County" = "countyfips",
+  "Rurality" = "urbancity",
+  "Democrat" = "pid7",
+  "Liberal" = "ideo5",
+  "Republican" = "pid7",
+  "Conservative" = "ideo5",
+  "Registered Voter" = "votereg",
+  "Presidential Approval" = "CC22_320a",
+  "Republican President Vote" = "presvote20post",
+  "Democrat President Vote" = "presvote20post",
+  "Attended Meetings" = "CC22_430a_1",
+  "Put Up Sign" = "CC22_430a_2",
+  "Worked for Candidate" = "CC22_430a_3",
+  "Protested" = "CC22_430a_4",
+  "Contacted Official" = "CC22_430a_5",
+  "Donated Money" = "CC22_430a_6",
+  "Legal Status Amnesty" = "CC22_331a",
+  "Increase Patrols" = "CC22_331b",
+  "Eliminate Lottery" = "CC22_331c",
+  "Increase Spending Plus Wall" = "CC22_331d"
+)
 
 ## select recoded variables ----
 cces2022Coded <- cces2022Coded |>

@@ -22,35 +22,6 @@ cces2020CodedFilename <- "CCES/Coded/CCES20Coded.rds"
 # import 2020 cces file ----
 cces2020 <- haven::read_dta(file = file.path(dataPath, cces2020Filename))
 
-## assign display names of relevant variables for 2020 ----
-relevantVariables2020 <- c(
-  "Weight" = "commonweight",
-  "End Time" = "endtime",
-  "Age" = "birthyr",
-  "White" = "race",
-  "Black" = "race",
-  "Hispanic" = "race",
-  "Male" = "gender",
-  "Education" = "educ",
-  "Income" = "faminc_new",
-  "Immigrant" = "immstat",
-  "State" = "inputstate",
-  "County" = "countyfips",
-  "Rurality" = "urbancity",
-  "Democrat" = "pid7",
-  "Liberal" = "ideo5",
-  "Republican" = "pid7",
-  "Conservative" = "ideo5",
-  "Presidential Approval" = "CC20_320a",
-  "Recent Incumbent Vote" = "presvote16post",
-  "Grant Legal Status" = "CC20_331a",
-  "Increase Patrols" = "CC20_331b",
-  "Withold Federal Funds" = "CC20_331c",
-  "Eliminate Lottery" = "CC20_331d",
-  "Increase Spending" = "CC20_331e",
-  "Dreamer Residence" = "CC20_350e"
-)
-
 ## initialize coded cces data frame ----
 cces2020Coded <- cces2020
 
@@ -108,9 +79,14 @@ cces2020Coded <- cces2020Coded |>
 cces2020Coded <- cces2020Coded |>
   dplyr::mutate(State = haven::as_factor(inputstate)) |>
   dplyr::mutate(County = countyfips) |>
-  dplyr::mutate(Rurality = haven::as_factor(urbancity))
+  recodeScale(
+    columnName = "urbancity",
+    newColumnName = "Rurality",
+    scaleMin = 1,
+    scaleMax = 4
+  )
 
-## recode political variables ----
+## recode political identity variables ----
 cces2020Coded <- cces2020Coded |>
   recodeBinary(
     columnName = "pid7",
@@ -135,6 +111,15 @@ cces2020Coded <- cces2020Coded |>
     newColumnName = "Conservative",
     qualifyingValues = 4:5,
     disqualifyingValues = c(1:3, 6)
+  )
+
+## recode political participation variables ----
+cces2020Coded <- cces2020Coded |>
+  recodeBinary(
+    columnName = "votereg",
+    newColumnName = "Registered Voter",
+    qualifyingValues = 1,
+    disqualifyingValues = 2:3
   ) |>
   recodeScale(
     columnName = "CC20_320a",
@@ -145,16 +130,58 @@ cces2020Coded <- cces2020Coded |>
   ) |>
   recodeBinary(
     columnName = "presvote16post",
-    newColumnName = "Recent Incumbent Vote",
+    newColumnName = "Republican President Vote",
+    qualifyingValues = 2,
+    disqualifyingValues = c(1, 3:7)
+  ) |>
+  recodeBinary(
+    columnName = "presvote16post",
+    newColumnName = "Democrat President Vote",
     qualifyingValues = 1,
-    disqualifyingValues = c(2:7)
+    disqualifyingValues = 2:7
+  ) |>
+  recodeBinary(
+    columnName = "CC20_430a_1",
+    newColumnName = "Attended Meetings",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC20_430a_2",
+    newColumnName = "Put Up Sign",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC20_430a_3",
+    newColumnName = "Worked for Candidate",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC20_430a_4",
+    newColumnName = "Protested",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC20_430a_5",
+    newColumnName = "Contacted Official",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
+  ) |>
+  recodeBinary(
+    columnName = "CC20_430a_6",
+    newColumnName = "Donated Money",
+    qualifyingValues = 1,
+    disqualifyingValues = 2
   )
 
 ## recode immigration variables ----
 cces2020Coded <- cces2020Coded |>
   recodeBinary(
     columnName = "CC20_331a",
-    newColumnName = "Grant Legal Status",
+    newColumnName = "Legal Status Amnesty",
     qualifyingValues = 1,
     disqualifyingValues = 2
   ) |>
@@ -178,16 +205,53 @@ cces2020Coded <- cces2020Coded |>
   ) |>
   recodeBinary(
     columnName = "CC20_331e",
-    newColumnName = "Increase Spending",
+    newColumnName = "Increase Spending Plus Wall",
     qualifyingValues = 1,
     disqualifyingValues = 2
   ) |>
   recodeBinary(
     columnName = "CC20_350e",
-    newColumnName = "Dreamer Residence",
+    newColumnName = "Legal Status for Dreamers",
     qualifyingValues = 1,
     disqualifyingValues = 2
   )
+
+## check new names of relevant variables for 2020 ----
+relevantVariables2020 <- c(
+  "Weight" = "commonweight",
+  "End Time" = "endtime",
+  "Age" = "birthyr",
+  "White" = "race",
+  "Black" = "race",
+  "Hispanic" = "race",
+  "Male" = "gender",
+  "Education" = "educ",
+  "Income" = "faminc_new",
+  "Immigrant" = "immstat",
+  "State" = "inputstate",
+  "County" = "countyfips",
+  "Rurality" = "urbancity",
+  "Democrat" = "pid7",
+  "Liberal" = "ideo5",
+  "Republican" = "pid7",
+  "Conservative" = "ideo5",
+  "Registered Voter" = "votereg",
+  "Presidential Approval" = "CC20_320a",
+  "Republican President Vote" = "presvote16post",
+  "Democrat President Vote" = "presvote16post",
+  "Attended Meetings" = "CC20_430a_1",
+  "Put Up Sign" = "CC20_430a_2",
+  "Worked for Candidate" = "CC20_430a_3",
+  "Protested" = "CC20_430a_4",
+  "Contacted Official" = "CC20_430a_5",
+  "Donated Money" = "CC20_430a_6",
+  "Legal Status Amnesty" = "CC20_331a",
+  "Increase Patrols" = "CC20_331b",
+  "Withold Federal Funds" = "CC20_331c",
+  "Eliminate Lottery" = "CC20_331d",
+  "Increase Spending Plus Wall" = "CC20_331e",
+  "Legal Status for Dreamers" = "CC20_350e"
+)
 
 ## select recoded variables ----
 cces2020Coded <- cces2020Coded |>
