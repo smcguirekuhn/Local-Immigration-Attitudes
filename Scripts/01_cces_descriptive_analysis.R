@@ -145,10 +145,6 @@ immigrationQuestions <- list(
     Wordings = "Prohibit illegal immigrants from using emergency hospital care and public schools.",
     Years = c(2012, 2013)
   ),
-  `Ban Muslims` = list(
-    Wordings = "Ban Muslims from immigrating to the US.",
-    Years = 2016
-  ),
   `Deny Asylum` = list(
     Wordings = "Deny access to asylum for immigrants who cross the US-Mexico border illegally",
     Years = 2024
@@ -176,6 +172,10 @@ immigrationQuestions <- list(
     Wordings = "Require local police departments to report to the federal government anyone 
     they identify as an illegal immigrant.",
     Years = 2017
+  ),
+  `Ban Muslims` = list(
+    Wordings = "Ban Muslims from immigrating to the US.",
+    Years = 2016
   )
 )
 
@@ -206,7 +206,10 @@ immigrationQuestions |>
 
 # create figure tracking immigration policy support among democrats and republicans ----
 ccesCombined |>
-  dplyr::mutate(Party = ifelse(test = Democrat == 1, yes = "Democrat", no = "Republican")) |>
+  dplyr::mutate(
+    Year = factor(Year, levels = seq(min(ccesCombined$Year), max(ccesCombined$Year))),
+    Party = ifelse(test = Democrat == 1, yes = "Democrat", no = "Republican")
+  ) |>
   dplyr::select(Year, Party, `Increase Patrols`, `Legal Status Amnesty`) |>
   tidyr::pivot_longer(
     cols = c(`Increase Patrols`, `Legal Status Amnesty`),
@@ -219,6 +222,7 @@ ccesCombined |>
   ggplot2::ggplot(mapping = ggplot2::aes(x = Year, y = `Mean Support`, group = factor(Party))) +
   ggplot2::geom_line(mapping = ggplot2::aes(color = factor(Party), linetype = factor(Party))) +
   ggplot2::scale_color_manual(values = c("Democrat" = "#A6C8FF", "Republican" = "#580A22")) +
+  ggplot2::scale_x_discrete(drop = FALSE) +
   ggplot2::facet_wrap(facets = ~Policy, nrow = 2) +
   ggplot2::labs(title = "Policy Support Over Time", color = "Party ID", linetype = "Party ID") +
   ggplot2::theme_minimal() +
