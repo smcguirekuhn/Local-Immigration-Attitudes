@@ -78,7 +78,8 @@ cces2016Coded <- cces2016Coded |>
 
 ## recode geographic variables ----
 cces2016Coded <- cces2016Coded |>
-  dplyr::mutate(State = haven::as_factor(inputstate))
+  dplyr::mutate(State = haven::as_factor(inputstate)) |>
+  dplyr::mutate(County = countyfips)
 
 ## recode political identity variables ----
 cces2016Coded <- cces2016Coded |>
@@ -223,6 +224,7 @@ relevantVariables2016 <- c(
   "Income" = "faminc",
   "Immigrant" = "immstat",
   "State" = "inputstate",
+  "County" = "countyfips",
   "Democrat" = "pid7",
   "Liberal" = "ideo5",
   "Republican" = "pid7",

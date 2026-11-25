@@ -217,10 +217,25 @@ ccesCombined |>
     values_to = "Support"
   ) |>
   dplyr::group_by(Year, Party, Policy) |>
-  dplyr::summarise(`Mean Support` = mean(Support, na.rm = TRUE)) |>
+  dplyr::summarise(
+    `Mean Support` = mean(Support, na.rm = TRUE),
+    `SE Support` = sd(Support, na.rm = TRUE)/sqrt(sum(!is.na(Support))),
+    `Mean Support Lower` = `Mean Support` - 2*`SE Support`,
+    `Mean Support Upper` = `Mean Support` + 2*`SE Support`
+  ) |>
   tidyr::drop_na() |>
   ggplot2::ggplot(mapping = ggplot2::aes(x = Year, y = `Mean Support`, group = factor(Party))) +
   ggplot2::geom_line(mapping = ggplot2::aes(color = factor(Party), linetype = factor(Party))) +
+  ggplot2::geom_point(mapping = ggplot2::aes(color = factor(Party)), size = 2) +
+  # ggplot2::geom_errorbar(
+  #   mapping = ggplot2::aes(
+  #     color = factor(Party),
+  #     ymin = `Mean Support Lower`,
+  #     ymax = `Mean Support Upper`
+  #   ),
+  #   width = 0.1
+  # ) +
+  ggplot2::geom_hline(yintercept = 0.5, color = "#444444", alpha = 0.5) +
   ggplot2::scale_color_manual(values = c("Democrat" = "#A6C8FF", "Republican" = "#580A22")) +
   ggplot2::scale_x_discrete(drop = FALSE) +
   ggplot2::facet_wrap(facets = ~Policy, nrow = 2) +
